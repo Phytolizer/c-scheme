@@ -1,0 +1,43 @@
+From 6e3511fe3a8a85067a44faf63768f47b421e99e0 Mon Sep 17 00:00:00 2001
+From: Kyle Coffey <me@phytolizer.dev>
+Date: Sat, 15 Jun 2024 22:43:02 -0500
+Subject: [PATCH] move noreturn for UCRT
+
+---
+ s7.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/s7.c b/s7.c
+index 01465d8..45cf5a6 100644
+--- a/s7.c
++++ b/s7.c
+@@ -334,13 +334,6 @@
+   #define Sentinel
+ #endif
+ 
+-#ifdef _MSC_VER
+-  #define noreturn _Noreturn /* deprecated in C23 */
+-#else
+-  #define noreturn __attribute__((noreturn))
+-  /* this is ok in gcc/g++/clang and tcc; pure attribute is rarely applicable here, and does not seem to be helpful (maybe safe_strlen) */
+-#endif
+-
+ #ifndef S7_ALIGNED
+   #define S7_ALIGNED 0
+   /* memclr and local_memset */
+@@ -1443,6 +1436,12 @@ struct s7_scheme {
+ #endif
+ };
+ 
++#ifdef _MSC_VER
++  #define noreturn _Noreturn /* deprecated in C23 */
++#else
++  #define noreturn __attribute__((noreturn))
++  /* this is ok in gcc/g++/clang and tcc; pure attribute is rarely applicable here, and does not seem to be helpful (maybe safe_strlen) */
++#endif
+ 
+ static noreturn void error_nr(s7_scheme *sc, s7_pointer type, s7_pointer info);
+ static s7_pointer wrap_string(s7_scheme *sc, const char *str, s7_int len);
+-- 
+2.42.0.windows.2
+

@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+${begin
+  (define-macro (fmt . args) `(format #f ,@args))
+  (define-macro (objects->string . objects)
+   `(apply string-append
+     (map
+      (lambda (obj) (object->string obj #f))
+      (list ,@objects))))
+  (define (gen-ident prefix)
+   (objects->string
+    prefix #\_ (hash-code (gensym) =)))
+}$
+${begin
+  (define vec
+   (with-let
+    (inlet
+     'default-capacity 8
+     'grow-factor 1.5)
+    (define (cap v) (fmt "(~A)->cap" v))
+    (define (elems v) (fmt "(~A)->elems" v))
+    (define (ptr v) (fmt "(~A)->ptr" v))
+    (define (full? v)
+     (fmt "(~A >= ~A)"
+      (elems v) (cap v)))
+    (define (grow v)
+     (let ((cap (cap v))
+           (ptr (ptr v))
+           (temp (gen-ident "temp")))
+      (fmt
+       "~A = ~A ? ~G * ~A : ~A;~
+        void* ~A = realloc(~A, ~A);~
+        if (!~A) {~
+          free(~A);~
+          ~A = 0;~
+        } else {~
+          ~A = ~A;~
+        }"
+       cap cap grow-factor cap default-capacity
+       temp ptr cap
+       temp
+       ptr
+       ptr
+       ptr temp)))
+
+    (define (grow-if-needed v)
+     (fmt "if (~A) {~A}" (full? v) (grow v)))
+
+    (define (push v x)
+     (string-append
+      (grow-if-needed v)
+      (fmt "~A[~A] = ~A;" (ptr v) (elems v) x))
+      (fmt "~A++;" (elems v)))
+
+    (curlet)))
+
+  (define (vec-type t)
+   (let ((name (hash-code t =)))
+    (fmt "struct vec_~A {int elems; int cap; ~A* ptr;}" name t)))
+}$
+
+typedef $(vec-type "unsigned int")$ vec_uint;
+
+int main(void) {
+    vec_uint xs;
+    $((vec 'push) "&xs" 3)$
+}
