@@ -1,0 +1,10 @@
+[wrap-file]
+source_url = https://ccrma.stanford.edu/software/s7/s7.tar.gz
+source_filename = s7.tar.gz
+source_hash = b3f5daebc4729dce921107a8bd1dfe58ffecc1ae86d9f94a6e53bf515342859f
+directory = s7
+patch_directory = s7
+diff_files = s7/0001-move-noreturn-for-UCRT.patch
+
+[provide]
+s7 = s7_dep
